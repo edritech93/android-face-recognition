@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
@@ -13,10 +14,12 @@ import android.widget.EditText;
 import com.luxand.FSDK;
 import com.luxand.FSDK.HTracker;
 
+import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 class ProcessImageAndDrawResults extends View {
+    private String TAG = "FACELOG";
     public HTracker mTracker;
 
     final int MAX_FACES = 50;
@@ -35,6 +38,8 @@ class ProcessImageAndDrawResults extends View {
     int mImageWidth, mImageHeight;
     boolean first_frame_saved;
     boolean rotated;
+
+    FSDK.HImage myImage = new FSDK.HImage();
 
     int GetFaceFrame(FSDK.FSDK_Features Features, FaceRectangle fr) {
         if (Features == null || fr == null)
@@ -94,6 +99,15 @@ class ProcessImageAndDrawResults extends View {
         first_frame_saved = false;
     }
 
+    public void loadImage() {
+        Log.e(TAG, "Start Load Image");
+        if (FSDK.FSDKE_OK == FSDK.LoadImageFromFile(myImage, "yudi3.png")) {
+            Log.e(TAG, "Image Loaded");
+        } else {
+            Log.e(TAG, "Image Not Loaded");
+        }
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         if (mStopping == 1) {
@@ -114,11 +128,11 @@ class ProcessImageAndDrawResults extends View {
         decodeYUV420SP(mRGBData, mYUVData, mImageWidth, mImageHeight);
 
         // Load image to FaceSDK
-        FSDK.HImage Image = new FSDK.HImage();
+//        FSDK.HImage Image = new FSDK.HImage();
         FSDK.FSDK_IMAGEMODE imagemode = new FSDK.FSDK_IMAGEMODE();
         imagemode.mode = FSDK.FSDK_IMAGEMODE.FSDK_IMAGE_COLOR_24BIT;
-        FSDK.LoadImageFromBuffer(Image, mRGBData, mImageWidth, mImageHeight, mImageWidth * 3, imagemode);
-        FSDK.MirrorImage(Image, false);
+        FSDK.LoadImageFromBuffer(myImage, mRGBData, mImageWidth, mImageHeight, mImageWidth * 3, imagemode);
+        FSDK.MirrorImage(myImage, false);
         FSDK.HImage RotatedImage = new FSDK.HImage();
         FSDK.CreateEmptyImage(RotatedImage);
 
@@ -128,11 +142,11 @@ class ProcessImageAndDrawResults extends View {
         if (rotated) {
             ImageWidth = mImageHeight;
             //ImageHeight = mImageWidth;
-            FSDK.RotateImage90(Image, -1, RotatedImage);
+            FSDK.RotateImage90(myImage, -1, RotatedImage);
         } else {
-            FSDK.CopyImage(Image, RotatedImage);
+            FSDK.CopyImage(myImage, RotatedImage);
         }
-        FSDK.FreeImage(Image);
+        FSDK.FreeImage(myImage);
 
         // Save first frame to gallery to debug (e.g. rotation angle)
 
@@ -177,6 +191,7 @@ class ProcessImageAndDrawResults extends View {
             if (IDs[i] != -1) {
                 String names[] = new String[1];
                 FSDK.GetAllNames(mTracker, IDs[i], names, 1024);
+//                Log.e(TAG, Arrays.toString(names));
                 if (names[0] != null && names[0].length() > 0) {
                     canvas.drawText(names[0], (mFacePositions[i].x1 + mFacePositions[i].x2) / 2, mFacePositions[i].y2 + shift, mPaintBlue);
                     named = true;

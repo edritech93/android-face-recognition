@@ -45,8 +45,10 @@ public class MainActivity extends AppCompatActivity {
 
             // Camera layer and drawing layer
             mDraw = new ProcessImageAndDrawResults(this);
+            mDraw.loadImage();
             mPreview = new Preview(this, mDraw);
             mDraw.mTracker = new FSDK.HTracker();
+
             String templatePath = this.getApplicationInfo().dataDir + "/" + database;
             if (FSDK.FSDKE_OK != FSDK.LoadTrackerMemoryFromFile(mDraw.mTracker, templatePath)) {
                 res = FSDK.CreateTracker(mDraw.mTracker);
@@ -63,8 +65,6 @@ public class MainActivity extends AppCompatActivity {
 //            // Menu
             LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View buttons = inflater.inflate(R.layout.activity_wajah, null);
-
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             addContentView(buttons, new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
 
         }
